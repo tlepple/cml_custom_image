@@ -61,6 +61,8 @@ COPY requirements.txt /build/requirements.txt
 ADD python-prebuilt-3.10.14-20240911-pkg.tar.gz /usr/local
 COPY pip.conf /etc/pip.conf
 
+#RUN mkdir -p /home/cdsw/.jupyter && \
+#    echo "# Default configuration" > /home/cdsw/.jupyter/jupyter_kernel_gateway_config.py
 
 RUN ldconfig && \
     pip3 config set install.user false && \
@@ -89,12 +91,16 @@ RUN pip install pyodbc
 # Environment variables for ML Runtime
 ENV ML_RUNTIME_EDITOR="PBJ Workbench" \
     ML_RUNTIME_METADATA_VERSION=2 \
-    ML_RUNTIME_EDITION="ODBC-Tim" \
-    ML_RUNTIME_SHORT_VERSION="1.1" \
+    ML_RUNTIME_EDITION="ODBC-Tim3" \
+    ML_RUNTIME_SHORT_VERSION="1.3" \
     ML_RUNTIME_MAINTENANCE_VERSION=1 \
     ML_RUNTIME_JUPYTER_KERNEL_NAME="python3" \
     ML_RUNTIME_DESCRIPTION="This runtime includes telnet, ODBC, and sklearn with upgraded packages" \
-    ML_RUNTIME_FULL_VERSION="1.1.1"
+    ML_RUNTIME_JUPYTER_KERNEL_GATEWAY_CMD="jupyter kernelgateway --config=/home/cdsw/.jupyter/jupyter_kernel_gateway_config.py" \
+    ML_RUNTIME_JUPYTER_KERNEL_NAME="python3" 
+#    ML_RUNTIME_FULL_VERSION="1.1.3"
+
+ENV ML_RUNTIME_FULL_VERSION="${ML_RUNTIME_SHORT_VERSION}.${ML_RUNTIME_MAINTENANCE_VERSION}"
 
 LABEL \
     com.cloudera.ml.runtime.runtime-metadata-version=$ML_RUNTIME_METADATA_VERSION \
@@ -105,5 +111,6 @@ LABEL \
     com.cloudera.ml.runtime.full-version=$ML_RUNTIME_FULL_VERSION \
     com.cloudera.ml.runtime.short-version=$ML_RUNTIME_SHORT_VERSION \
     com.cloudera.ml.runtime.maintenance-version=$ML_RUNTIME_MAINTENANCE_VERSION
+
 
 WORKDIR /home/cdsw
