@@ -52,7 +52,8 @@ RUN mkdir -p /etc/pki/tls/certs && \
 ENV PYTHON3_VERSION=3.10.14 \
     ML_RUNTIME_KERNEL="Python 3.10"
 
-
+#create the build directory
+RUN mkdir -p /build
 
 # Add additional files
 COPY cloudera.mplstyle /etc/cloudera.mplstyle
@@ -67,16 +68,23 @@ RUN ldconfig && \
     rm -rf /build
 
 # Install SQL Server ODBC and pyodbc
-RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
-    curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list | tee /etc/apt/sources.list.d/msprod.list && \
-    apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 && \
-    pip install pyodbc
 
+# Install required tools and add Microsoft repository
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl gpg && \
+    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/ubuntu/20.04/prod focal main" > /etc/apt/sources.list.d/msprod.list && \
+    apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 mssql-tools18 unixodbc-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Instll pyodbc
+RUN pip install pyodbc
 
 
 # Install Python requirements
-RUN pip3 install --no-cache-dir --no-warn-script-location -r /build/requirements.txt && \
-    rm -rf /build
+#RUN pip3 install --no-cache-dir --no-warn-script-location -r /build/requirements.txt && \
+#    rm -rf /build
 
 # Environment variables for ML Runtime
 ENV ML_RUNTIME_EDITOR="PBJ Workbench" \
